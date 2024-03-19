@@ -15,7 +15,7 @@ export async function getApiInfo() {
             }));
             pokes.push(...auxPoke);
             link = pokeApi.next;
-        } while (link != null && pokes.length < 40);
+        } while (link != null && pokes.length < 200);
         
         let pokeData = await Promise.all(pokes.map(async e => {
             let pokemon = await axios.get(e.url);
