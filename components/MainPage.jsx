@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from "react";
+import Icon from 'react-native-vector-icons/FontAwesome';
+import TypeIcon from "./TypeIcon";
+
 import {
   View,
   Text,
@@ -9,6 +12,7 @@ import {
   Button,
 } from "react-native";
 import { getApiInfo } from "../api/services";
+import ErrorBoundary from "./ErrorBoundary";
 
 const MainPage = () => {
   const [pokemonData, setPokemonData] = useState([]);
@@ -17,213 +21,165 @@ const MainPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getApiInfo();
-      setPokemonData(data);
+      try {
+        const data = await getApiInfo();
+        setPokemonData(data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
     fetchData();
   }, []);
 
   const renderPokemonCard = ({ item }) => (
-    <View style={styles.card} onTouchStart={() => handlePokePress(item)}>
+    <View style={styles.card}>
       <Image source={{ uri: item.img }} style={styles.image} />
       <View style={styles.details}>
         <Text style={styles.name}>
           {item.name.charAt(0).toUpperCase() + item.name.slice(1)}
         </Text>
         <View style={styles.typesContainer}>
+          {/* Itera sobre los tipos del Pokémon y muestra el icono correspondiente */}
           {item.types.map((type, index) => (
-            <Text
-              key={index}
-              style={[styles.type, { backgroundColor: getTypeColor(type) }]}
-            >
-              {type.charAt(0).toUpperCase() + type.slice(1)}
-            </Text>
+            <TypeIcon key={index} type={type} />
           ))}
         </View>
+        <Button
+          title="Mas info"
+          onPress={() => handlePokePress(item)}
+        />
       </View>
     </View>
   );
+
   const handlePokePress = (pokemon) => {
     setSelectedPoke(pokemon);
     setModalOn(true);
   };
-
-  const getTypeColor = (type) => {
-    switch (type.toLowerCase()) {
-      case "normal":
-        return "#A8A77A";
-      case "fire":
-        return "#EE8130";
-      case "water":
-        return "#6390F0";
-      case "electric":
-        return "#F7D02C";
-      case "grass":
-        return "#7AC74C";
-      case "ice":
-        return "#96D9D6";
-      case "fighting":
-        return "#C22E28";
-      case "poison":
-        return "#A33EA1";
-      case "ground":
-        return "#E2BF65";
-      case "flying":
-        return "#A98FF3";
-      case "psychic":
-        return "#F95587";
-      case "bug":
-        return "#A6B91A";
-      case "rock":
-        return "#B6A136";
-      case "ghost":
-        return "#735797";
-      case "dragon":
-        return "#6F35FC";
-      case "dark":
-        return "#705746";
-      case "steel":
-        return "#B7B7CE";
-      case "fairy":
-        return "#D685AD";
-      default:
-        return "#BDBDAE"; // Color por defecto
-    }
-  };
-
+  
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={pokemonData}
-        renderItem={renderPokemonCard}
-        keyExtractor={(item) => item.id.toString()}
-      />
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalOn}
-        onRequestClose={() => {
-          setModalOn(!modalOn);
-        }}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            {/* Aquí puedes mostrar todos los datos del Pokémon seleccionado */}
-            {selectedPoke && (
-              <>
-                <Image
-                  source={{ uri: selectedPoke.img }}
-                  style={styles.modalImage}
-                />
-                <Text style={styles.modalText}>
-                  <Text style={styles.boldText}>Nombre:</Text>{" "}
-                  {selectedPoke.name.charAt(0).toUpperCase() +
-                    selectedPoke.name.slice(1)}
-                </Text>
-                <Text style={styles.modalText}>
-                  <Text style={styles.boldText}>Tipos:</Text>{" "}
-                  {selectedPoke.types
-                    .map((type) => type.charAt(0).toUpperCase() + type.slice(1))
-                    .join(", ")}
-                </Text>
-                <Text style={styles.modalText}>
-                  <Text style={styles.boldText}>Velocidad:</Text>{" "}
-                  {selectedPoke.speed}
-                </Text>
-                <Text style={styles.modalText}>
-                  <Text style={styles.boldText}>HP:</Text> {selectedPoke.hp}
-                </Text>
-                <Text style={styles.modalText}>
-                  <Text style={styles.boldText}>Ataque:</Text>{" "}
-                  {selectedPoke.attack}
-                </Text>
-                <Text style={styles.modalText}>
-                  <Text style={styles.boldText}>Defensa:</Text>{" "}
-                  {selectedPoke.defense}
-                </Text>
-                <Button title="Cerrar" onPress={() => setModalOn(false)} />
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
-    </View>
+    <ErrorBoundary>
+      <View style={styles.container}>
+        <FlatList
+          data={pokemonData}
+          renderItem={renderPokemonCard}
+          keyExtractor={(item) => item.id.toString()}
+        />
+        <Modal
+                animationType='slide'
+                transparent={true}
+                visible={modalOn}
+                onRequestClose={() => {
+                    setModalOn(!modalOn)
+                }}
+            >
+                <View style={styles.centeredView}>
+                    <View style={styles.modalView}>
+                        {/* Aquí puedes mostrar todos los datos del Pokémon seleccionado */}
+                        {selectedPoke && (
+         <>
+         <Image source={{ uri: selectedPoke.img }} style={styles.modalImage} />
+         <Text style={styles.modalText}>
+             <Text style={styles.boldText}>Nombre:</Text> {selectedPoke.name.charAt(0).toUpperCase() + selectedPoke.name.slice(1)}
+         </Text>
+         <Text style={styles.modalText}>
+             <Text style={styles.boldText}>Tipos:</Text> {selectedPoke.types.map(type => type.charAt(0).toUpperCase() + type.slice(1)).join(', ')}
+         </Text>
+         <Text style={styles.modalText}>
+             <Text style={styles.boldText}>Velocidad:</Text> {selectedPoke.speed}
+         </Text>
+         <Text style={styles.modalText}>
+             <Text style={styles.boldText}>HP:</Text> {selectedPoke.hp}
+         </Text>
+         <Text style={styles.modalText}>
+             <Text style={styles.boldText}>Ataque:</Text> {selectedPoke.attack}
+         </Text>
+         <Text style={styles.modalText}>
+             <Text style={styles.boldText}>Defensa:</Text> {selectedPoke.defense}
+         </Text>
+         <Button title="Cerrar" onPress={() => setModalOn(false)} />
+     </>
+                        )}
+                    </View>
+                </View>
+            </Modal>
+      </View>
+    </ErrorBoundary>
   );
 };
 
 const styles = StyleSheet.create({
   boldText: {
-    fontWeight: "bold",
-  },
+    fontWeight: 'bold',
+},
   container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    padding: 10,
+      flex: 1,
+      backgroundColor: '#fff',
+      padding: 10,
   },
   card: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: '#ccc',
+      borderRadius: 5,
+      padding: 10,
+      marginBottom: 10,
   },
   image: {
-    width: 100,
-    height: 100,
-    marginRight: 10,
+      width: 100,
+      height: 100,
+      marginRight: 10,
   },
   details: {
-    flex: 1,
+      flex: 1,
   },
   name: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 5,
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 5,
   },
   typesContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginBottom: 5,
   },
   type: {
-    marginRight: 5,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 5,
-    color: "#fff",
+      marginRight: 5,
+      paddingHorizontal: 5,
+      paddingVertical: 2,
+      borderRadius: 5,
+      color: '#fff',
   },
   centeredView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 22,
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: 22,
   },
   modalView: {
-    margin: 20,
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 35,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+      margin: 20,
+      backgroundColor: 'white',
+      borderRadius: 20,
+      padding: 35,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: {
+          width: 0,
+          height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
   },
   modalText: {
-    marginBottom: 10,
-    textAlign: "center",
-    fontSize: 16,
+      marginBottom: 10,
+      textAlign: 'center',
+      fontSize: 16,
   },
   modalImage: {
-    width: 200,
-    height: 200,
-    marginBottom: 10,
+      width: 200,
+      height: 200,
+      marginBottom: 10,
   },
 });
-
 export default MainPage;
